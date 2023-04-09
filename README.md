@@ -1,2 +1,2 @@
 # MCS51-SimpleCar
-A simple car based on MCS-51.
+做着玩的一个简单的51单片机小车，可蓝牙遥控、避障、跟随，但效果一般。

@@ -1,0 +1,293 @@
+C51 COMPILER V9.54   MAIN                                                                  04/09/2022 22:44:09 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\Software\Keil_v5\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\List
+                    -ings\main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          #include "UART.H"
+   3          
+   4          #define Speed 25        //0~100  
+   5          
+   6          sbit STATE = P1^7;
+   7          sbit LEFT = P2^1;
+   8          sbit MIDDLE = P2^0;
+   9          sbit RIGHT = P2^2;
+  10          sbit LF = P3^6;
+  11          sbit LB = P3^7;
+  12          sbit RF = P3^5;
+  13          sbit RB = P3^4;
+  14          
+  15          unsigned char Mode = 0;
+  16          
+  17          void Delayus(unsigned char n)           //@11.0592MHz
+  18          {
+  19   1              unsigned char i;
+  20   1      
+  21   1              while(n--)
+  22   1              {
+  23   2                      i = 2;
+  24   2                      while (--i);
+  25   2              }
+  26   1      }
+  27          
+  28          void Forward(void)
+  29          {
+  30   1              LF = 1;
+  31   1              LB = 0;
+  32   1              RF = 1;
+  33   1              RB = 0;
+  34   1      }
+  35          
+  36          void Back(void)
+  37          {
+  38   1              LF = 0;
+  39   1              LB = 1;
+  40   1              RF = 0;
+  41   1              RB = 1;
+  42   1      }
+  43          
+  44          void Left(void)
+  45          {
+  46   1              LF = 0;
+  47   1              LB = 1;
+  48   1              RF = 1;
+  49   1              RB = 0;
+  50   1      }
+  51          
+  52          void Right(void)
+  53          {
+  54   1              LF = 1;
+C51 COMPILER V9.54   MAIN                                                                  04/09/2022 22:44:09 PAGE 2   
+
+  55   1              LB = 0;
+  56   1              RF = 0;
+  57   1              RB = 1;
+  58   1      }
+  59          
+  60          void Stop(void)
+  61          {
+  62   1              LF = 1;
+  63   1              LB = 1;
+  64   1              RF = 1;
+  65   1              RB = 1;
+  66   1      }
+  67          
+  68          //低速
+  69          void Forward_S(void)
+  70          {
+  71   1              LF = 1;
+  72   1              LB = 0;
+  73   1              RF = 1;
+  74   1              RB = 0;
+  75   1              Delayus(Speed);
+  76   1              LF = 1;
+  77   1              LB = 1;
+  78   1              RF = 1;
+  79   1              RB = 1;
+  80   1              Delayus(100-Speed);
+  81   1      }
+  82          
+  83          void Back_S(void)
+  84          {
+  85   1              LF = 0;
+  86   1              LB = 1;
+  87   1              RF = 0;
+  88   1              RB = 1;
+  89   1              Delayus(Speed);
+  90   1              LF = 1;
+  91   1              LB = 1;
+  92   1              RF = 1;
+  93   1              RB = 1;
+  94   1              Delayus(100-Speed);
+  95   1      }
+  96          
+  97          void Left_S(void)
+  98          {
+  99   1              LF = 0;
+ 100   1              LB = 1;
+ 101   1              RF = 1;
+ 102   1              RB = 0;
+ 103   1              Delayus(Speed);
+ 104   1              LF = 1;
+ 105   1              LB = 1;
+ 106   1              RF = 1;
+ 107   1              RB = 1;
+ 108   1              Delayus(100-Speed);
+ 109   1      }
+ 110          
+ 111          void Right_S(void)
+ 112          {
+ 113   1              LF = 1;
+ 114   1              LB = 0;
+ 115   1              RF = 0;
+ 116   1              RB = 1;
+C51 COMPILER V9.54   MAIN                                                                  04/09/2022 22:44:09 PAGE 3   
+
+ 117   1              Delayus(Speed);
+ 118   1              LF = 1;
+ 119   1              LB = 1;
+ 120   1              RF = 1;
+ 121   1              RB = 1;
+ 122   1              Delayus(100-Speed);
+ 123   1      }
+ 124          
+ 125          void Obstacle_Avoidance(void)
+ 126          {
+ 127   1              unsigned int i;
+ 128   1              if(LEFT != 0 && MIDDLE != 0 && RIGHT != 0)  //无障碍
+ 129   1              {
+ 130   2                      Forward_S();
+ 131   2              }
+ 132   1              if(LEFT == 0 && RIGHT != 0)  //左方有障碍
+ 133   1              {
+ 134   2                      Right_S();
+ 135   2              }
+ 136   1              if(RIGHT == 0 && LEFT != 0)  //右方有障碍
+ 137   1              {
+ 138   2                      Left_S();
+ 139   2              }
+ 140   1              if((RIGHT == 0 && LEFT == 0) || (MIDDLE == 0 && LEFT != 0 && RIGHT != 0))  //前方有障碍
+ 141   1              {
+ 142   2                      for(i=0;i<50;i++)
+ 143   2                      {
+ 144   3                              Back_S();
+ 145   3                      }
+ 146   2                      for(i=0;i<60000;i++)
+ 147   2                      {
+ 148   3                              Left_S();
+ 149   3                              if((RIGHT != 0 && LEFT != 0 && MIDDLE != 0) || Mode != 2)
+ 150   3                              {
+ 151   4                                      break;
+ 152   4                              }
+ 153   3                      }
+ 154   2              }
+ 155   1      }
+ 156          
+ 157          void Following(void)
+ 158          {
+ 159   1              if(LEFT != 0 && MIDDLE != 0 && RIGHT != 0)  //无目标
+ 160   1              {
+ 161   2                      Stop();
+ 162   2              }
+ 163   1              if(LEFT == 0 && RIGHT != 0)  //左方有目标
+ 164   1              {
+ 165   2                      Left_S();
+ 166   2              }
+ 167   1              if(RIGHT == 0 && LEFT != 0)  //右方有目标
+ 168   1              {
+ 169   2                      Right_S();
+ 170   2              }
+ 171   1              if((RIGHT == 0 && LEFT == 0) || (MIDDLE == 0 && LEFT != 0 && RIGHT != 0))  //前方有目标
+ 172   1              {
+ 173   2                      Forward_S();
+ 174   2              }
+ 175   1      }
+ 176          
+ 177          void main(void)
+ 178          {
+C51 COMPILER V9.54   MAIN                                                                  04/09/2022 22:44:09 PAGE 4   
+
+ 179   1              UART_Init();
+ 180   1              while(1)
+ 181   1              {
+ 182   2                      if(Mode == 1)  //遥控模式
+ 183   2                      {
+ 184   3                              while(1)
+ 185   3                              {
+ 186   4                                      if(Mode != 1)
+ 187   4                                      {
+ 188   5                                              break;
+ 189   5                                      }
+ 190   4      //                              if(STATE == 0)
+ 191   4      //                              {
+ 192   4      //                                      Stop();
+ 193   4      //                                      break;
+ 194   4      //                              }
+ 195   4                              }
+ 196   3                      }
+ 197   2                      if(Mode == 2)  //避障模式
+ 198   2                      {
+ 199   3                              while(1)
+ 200   3                              {
+ 201   4                                      Obstacle_Avoidance();
+ 202   4                                      if(Mode != 2)
+ 203   4                                      {
+ 204   5                                              break;
+ 205   5                                      }
+ 206   4      //                              if(STATE == 0)
+ 207   4      //                              {
+ 208   4      //                                      Stop();
+ 209   4      //                                      Mode = 0;
+ 210   4      //                                      break;
+ 211   4      //                              }
+ 212   4                              }
+ 213   3                      }
+ 214   2                      if(Mode == 3)  //跟随模式
+ 215   2                      {
+ 216   3                              while(1)
+ 217   3                              {
+ 218   4                                      Following();
+ 219   4                                      if(Mode != 3)
+ 220   4                                      {
+ 221   5                                              break;
+ 222   5                                      }
+ 223   4      //                              if(STATE == 0)
+ 224   4      //                              {
+ 225   4      //                                      Stop();
+ 226   4      //                                      Mode = 0;
+ 227   4      //                                      break;
+ 228   4      //                              }
+ 229   4                              }
+ 230   3                      }
+ 231   2              }
+ 232   1      }
+ 233          
+ 234          void UART_Routine(void) interrupt 4
+ 235          {
+ 236   1              char bluetooth = 0;
+ 237   1              EA = 0;
+ 238   1              if(RI == 1)
+ 239   1              {
+ 240   2                      bluetooth = SBUF;
+C51 COMPILER V9.54   MAIN                                                                  04/09/2022 22:44:09 PAGE 5   
+
+ 241   2                      RI = 0;
+ 242   2                      switch(bluetooth)
+ 243   2                      {
+ 244   3                              case'5':Mode = 1;break;
+ 245   3                              case'6':Mode = 2;break;
+ 246   3                              case'7':Mode = 3;break;
+ 247   3                      }
+ 248   2                      if(Mode == 1)
+ 249   2                      {
+ 250   3                              switch(bluetooth)
+ 251   3                              {
+ 252   4                                      case'0':Stop();break;
+ 253   4                                      case'1':Forward();break;
+ 254   4                                      case'2':Back();break;
+ 255   4                                      case'3':Left();break;
+ 256   4                                      case'4':Right();break;
+ 257   4                              }
+ 258   3                      }
+ 259   2              }
+ 260   1              EA = 1;
+ 261   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    454    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
